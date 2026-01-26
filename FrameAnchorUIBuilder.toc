@@ -1,0 +1,21 @@
+## Interface: 120000, 120001
+## Title: FrameAnchorUIBuilder
+## Notes: Dynamically anchor any two frames together.
+## Author: Obk
+## Version: 1.0
+## SavedVariables: FrameAnchorDB
+## OptionalDeps: Ace3, LibDeflate
+
+# Libraries
+Libraries\LibStub\LibStub.lua
+Libraries\CallbackHandler-1.0\CallbackHandler-1.0.xml
+Libraries\AceAddon-3.0\AceAddon-3.0.xml
+Libraries\AceDB-3.0\AceDB-3.0.xml
+Libraries\AceDBOptions-3.0\AceDBOptions-3.0.xml
+Libraries\AceConsole-3.0\AceConsole-3.0.xml
+Libraries\AceGUI-3.0\AceGUI-3.0.xml
+Libraries\AceConfig-3.0\AceConfig-3.0.xml
+Libraries\LibDeflate\LibDeflate.lua
+Libraries\AceSerializer-3.0\AceSerializer-3.0.xml
+
+FrameAnchorUIBuilder.lua
