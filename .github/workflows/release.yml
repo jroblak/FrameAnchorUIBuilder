@@ -14,10 +14,6 @@ jobs:
         with:
           fetch-depth: 0
           
-      - name: Configure Git Authentication
-        run: |
-          git config --global url."https://${{ secrets.GITHUB_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-      
       - name: Package and Release
         uses: BigWigsMods/packager@v2
         env:

@@ -2,30 +2,14 @@
 enable-nolib-creation: no
 
 externals:
-    Libraries/LibStub:
-        url: https://github.com/Stanzilla/LibStub
-        tag: latest
-    Libraries/CallbackHandler-1.0:
-        url: https://github.com/BigWigsMods/CallbackHandler-1.0
-        tag: latest
-    Libraries/AceAddon-3.0:
-        url: https://github.com/WoWAce/AceAddon-3.0
-        tag: latest
-    Libraries/AceDB-3.0:
-        url: https://github.com/WoWAce/AceDB-3.0
-        tag: latest
-    Libraries/AceConsole-3.0:
-        url: https://github.com/WoWAce/AceConsole-3.0
-        tag: latest
-    Libraries/AceGUI-3.0:
-        url: https://github.com/WoWAce/AceGUI-3.0
-        tag: latest
-    Libraries/AceConfig-3.0:
-        url: https://github.com/WoWAce/AceConfig-3.0
-        tag: latest
-    Libraries/AceSerializer-3.0:
-        url: https://github.com/WoWAce/AceSerializer-3.0
-        tag: latest
+    Libraries/LibStub: https://repos.curseforge.com/wow/libstub/trunk
+    Libraries/CallbackHandler-1.0: https://repos.curseforge.com/wow/callbackhandler/trunk/CallbackHandler-1.0
+    Libraries/AceAddon-3.0: https://repos.curseforge.com/wow/ace3/trunk/AceAddon-3.0
+    Libraries/AceDB-3.0: https://repos.curseforge.com/wow/ace3/trunk/AceDB-3.0
+    Libraries/AceConsole-3.0: https://repos.curseforge.com/wow/ace3/trunk/AceConsole-3.0
+    Libraries/AceGUI-3.0: https://repos.curseforge.com/wow/ace3/trunk/AceGUI-3.0
+    Libraries/AceConfig-3.0: https://repos.curseforge.com/wow/ace3/trunk/AceConfig-3.0
+    Libraries/AceSerializer-3.0: https://repos.curseforge.com/wow/ace3/trunk/AceSerializer-3.0
     Libraries/LibDeflate:
-        url: https://github.com/SafeteeWoW/LibDeflate
+        url: https://github.com/SafeteeWoW/LibDeflate.git
         tag: latest
