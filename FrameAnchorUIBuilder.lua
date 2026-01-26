@@ -1,7 +1,3 @@
--- =========================================================================
--- FRAME ANCHOR 18.8: SLIDER OVERRIDE FIX
--- =========================================================================
-
 local AddonName = "FrameAnchor"
 local FA = LibStub("AceAddon-3.0"):NewAddon(AddonName, "AceConsole-3.0", "AceSerializer-3.0")
 local AC = LibStub("AceConfig-3.0")
@@ -9,18 +5,15 @@ local ACD = LibStub("AceConfigDialog-3.0")
 local ACR = LibStub("AceConfigRegistry-3.0")
 local LD = LibStub("LibDeflate")
 
--- Anchor Points
 local POINTS = {
     ["TOPLEFT"] = "Top Left", ["TOP"] = "Top", ["TOPRIGHT"] = "Top Right",
     ["LEFT"] = "Left", ["CENTER"] = "Center", ["RIGHT"] = "Right",
     ["BOTTOMLEFT"] = "Bottom Left", ["BOTTOM"] = "Bottom", ["BOTTOMRIGHT"] = "Bottom Right"
 }
 
--- Icons
 local ICON_EXPAND = "|TInterface\\Buttons\\UI-PlusButton-Up:16|t " 
 local ICON_COLLAPSE = "|TInterface\\Buttons\\UI-MinusButton-Up:16|t "
 
--- State Variables
 local CreationFrame = nil
 local PickerActive = false
 local PickerSource = nil 
@@ -31,12 +24,11 @@ local exportString = ""
 local expandedStates = {} 
 local validFrames = {} 
 
--- Performance & State Flags
 FA.EditModeActive = false
 FA.EditModeTimer = nil
-FA.ForceUpdate = false -- Master key to override Strict Mode checks
+FA.ForceUpdate = false 
 
--- Nav Buttons
+
 local NavUp = CreateFrame("Button", "FA_Nav_Up", UIParent)
 local NavDown = CreateFrame("Button", "FA_Nav_Down", UIParent)
 local NavBlock = CreateFrame("Button", "FA_Nav_Block", UIParent)
@@ -102,7 +94,6 @@ function FA:OnInitialize()
 end
 
 function FA:OnEnable()
-    -- Native Event Frame (No AceEvent dependency needed)
     local eventFrame = CreateFrame("Frame")
     eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     eventFrame:SetScript("OnEvent", function(_, event)
@@ -113,11 +104,10 @@ function FA:OnEnable()
 end
 
 function FA:OnWorldLoad()
-    -- THE STARTUP HAMMER: Retries anchor application to catch slow addons
     local attempt = 0
     local function TryApply()
         attempt = attempt + 1
-        FA:ApplyAllAnchors() -- Now includes implicit ForceUpdate
+        FA:ApplyAllAnchors()
         
         if attempt < 4 then
             local delay = (attempt == 1) and 1 or (attempt == 2) and 2 or 4
@@ -163,9 +153,6 @@ end
 function FA:ApplyAllAnchors()
     if InCombatLockdown() then return end
 
-    -- === FIX IS HERE ===
-    -- When we call ApplyAllAnchors (from Sliders, Login, or Toggle),
-    -- we ALWAYS want it to happen, ignoring Strict Mode.
     FA.ForceUpdate = true
     
     for childName, data in pairs(self.db.profile.links) do
@@ -178,13 +165,11 @@ function FA:ApplyAllAnchors()
         end
     end
 
-    -- Turn the override back off so the passive Hook respects Strict Mode
     FA.ForceUpdate = false
 end
 
 function FA:SecureAnchor(child, parent, point, relPoint, x, y)
     local function MoveIt()
-        -- UNIVERSAL RULE: Never touch frames in combat
         if InCombatLockdown() then return end
         
         -- Prevent infinite loops
@@ -192,17 +177,10 @@ function FA:SecureAnchor(child, parent, point, relPoint, x, y)
 
         local mode = FA.db.profile.perfMode or "LIGHT"
         
-        -- STRICT MODE LOGIC:
-        -- If we are NOT forcing an update (Slider/Login/Toggle)
-        -- AND we are NOT in Edit Mode...
-        -- STOP. Do nothing. (Zero CPU usage)
         if mode == "STRICT" and not FA.EditModeActive and not FA.ForceUpdate then
             return
         end
 
-        -- LIGHT MODE:
-        -- Calculate if the frame is already correct.
-        -- If it is, STOP. (Low CPU usage)
         if mode ~= "YOLO" then
             local currP, currRel, currRelP, currX, currY = child:GetPoint()
             if currP == point and currRel == parent and currRelP == relPoint and 
@@ -212,7 +190,6 @@ function FA:SecureAnchor(child, parent, point, relPoint, x, y)
             end
         end
 
-        -- EXECUTE:
         child.fa_isMoving = true 
         child:ClearAllPoints()
         child:SetPoint(point, parent, relPoint, x or 0, y or 0)
