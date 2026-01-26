@@ -5,6 +5,7 @@
 ## Version: 1.0
 ## SavedVariables: FrameAnchorDB
 ## OptionalDeps: Ace3, LibDeflate
+## IconTexture: Interface\AddOns\FrameAnchorUIBuilder\logo.png
 ## X-Curse-Project-ID: 
 ## X-Wago-ID: 
 
