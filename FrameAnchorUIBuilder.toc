@@ -6,8 +6,8 @@
 ## SavedVariables: FrameAnchorDB
 ## OptionalDeps: Ace3, LibDeflate
 ## IconTexture: Interface\AddOns\FrameAnchorUIBuilder\logo.png
-## X-Curse-Project-ID: 
-## X-Wago-ID: 
+## X-Curse-Project-ID: 1445432
+## X-Wago-ID: ZKbxqYN1
 
 # Libraries
 Libraries\LibStub\LibStub.lua
