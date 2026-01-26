@@ -1,0 +1,31 @@
+# .pkgmeta
+enable-nolib-creation: no
+
+externals:
+    Libraries/LibStub:
+        url: https://github.com/Stanzilla/LibStub
+        tag: latest
+    Libraries/CallbackHandler-1.0:
+        url: https://github.com/BigWigsMods/CallbackHandler-1.0
+        tag: latest
+    Libraries/AceAddon-3.0:
+        url: https://github.com/WoWAce/AceAddon-3.0
+        tag: latest
+    Libraries/AceDB-3.0:
+        url: https://github.com/WoWAce/AceDB-3.0
+        tag: latest
+    Libraries/AceConsole-3.0:
+        url: https://github.com/WoWAce/AceConsole-3.0
+        tag: latest
+    Libraries/AceGUI-3.0:
+        url: https://github.com/WoWAce/AceGUI-3.0
+        tag: latest
+    Libraries/AceConfig-3.0:
+        url: https://github.com/WoWAce/AceConfig-3.0
+        tag: latest
+    Libraries/AceSerializer-3.0:
+        url: https://github.com/WoWAce/AceSerializer-3.0
+        tag: latest
+    Libraries/LibDeflate:
+        url: https://github.com/SafeteeWoW/LibDeflate
+        tag: latest

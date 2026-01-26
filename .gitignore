@@ -1,0 +1,9 @@
+# Ignore the Libs folder (The packager handles this)
+Libraries/
+
+# Mac junk
+.DS_Store
+
+# IDE junk
+.vscode/
+.idea/
