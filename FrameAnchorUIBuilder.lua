@@ -26,6 +26,7 @@ local ReloadUI = ReloadUI
 local StaticPopup_Show = StaticPopup_Show
 local hooksecurefunc = hooksecurefunc
 local SetOverrideBindingClick = SetOverrideBindingClick
+local GetCursorPosition = GetCursorPosition
 local ClearOverrideBindings = ClearOverrideBindings
 local C_Timer = C_Timer
 
@@ -445,6 +446,15 @@ function FA:ShowCreationFrame()
     close:SetFrameLevel(f:GetFrameLevel() + 20)
     close:SetScript("OnClick", function() f:Hide() end)
 
+    f:SetScript("OnHide", function()
+        C_Timer.After(0.01, function()
+            if not FA.state.creationFrameSubmitted then
+                ACD:Open(AddonName)
+            end
+            FA.state.creationFrameSubmitted = false
+        end)
+    end)
+
     local function CreateInput(label, subtext, yOffset, showPicker)
         local lbl = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         lbl:SetPoint("TOPLEFT", 25, yOffset)
@@ -502,6 +512,8 @@ function FA:ShowCreationFrame()
             FA:Print("Parent and child cannot be the same frame.")
             return 
         end
+
+        FA.state.creationFrameSubmitted = true
         
         FA.db.profile.links[c] = { 
             parent = p, 
@@ -589,7 +601,10 @@ function FA:GetOptions()
                         type = "execute", 
                         name = "Create New Anchor...", 
                         width = "full", 
-                        func = function() FA:ShowCreationFrame() end 
+                        func = function() 
+                            ACD:Close(AddonName)
+                            FA:ShowCreationFrame() 
+                        end 
                     },
                     space2 = { order = 2, type = "description", name = "\n" },
                     header = { order = 3, type = "header", name = "Active Anchors" },
@@ -914,6 +929,10 @@ function FA:StartPicker(callback, source)
     SetOverrideBindingClick(highlighter, true, "RIGHT", "FA_Nav_Block")
     SetOverrideBindingClick(highlighter, true, "ESCAPE", "FA_Nav_Cancel")
     
+    if not self.pickerUpdateFrame then  
+        self.pickerUpdateFrame = CreateFrame("Frame")
+    end
+    local updateFrame = self.pickerUpdateFrame
     local updateFrame = CreateFrame("Frame")
     local lastUpdate = 0
     local lastSelectedFrame = nil
@@ -926,7 +945,6 @@ function FA:StartPicker(callback, source)
             return 
         end
         
-        -- THROTTLE: Only update at defined interval
         lastUpdate = lastUpdate + elapsed
         if lastUpdate < PICKER_UPDATE_INTERVAL then 
             return 
@@ -935,12 +953,62 @@ function FA:StartPicker(callback, source)
         
         if not state.manualSelection then
             wipe(state.validFrames)
+            if not state.seenFrames then state.seenFrames = {} end
+            local seen = state.seenFrames
+            wipe(seen)
             
+            -- Method 1: Standard mouse focus (interactive frames)
             local frames = GetMouseFoci and GetMouseFoci() or {GetMouseFocus()}
             
             for _, frm in ipairs(frames or {}) do
                 if frm and frm ~= WorldFrame and frm ~= FA.highlighter and frm ~= FA.hud and frm:IsVisible() then
-                    tinsert(state.validFrames, frm)
+                    if not seen[frm] then
+                        seen[frm] = true
+                        tinsert(state.validFrames, frm)
+                    end
+                end
+            end
+            
+            -- Method 2: Geometric hit test (only if Method 1 found few results)
+            -- This catches clickthrough frames but is expensive, so we skip it
+            -- when GetMouseFoci already found interactive frames
+            if #state.validFrames <= 1 then
+                local cursorX, cursorY = GetCursorPosition()
+                local scale = UIParent:GetEffectiveScale()
+                cursorX, cursorY = cursorX / scale, cursorY / scale
+                
+                for name, obj in pairs(_G) do
+                    -- Quick filter: only check string keys (frame names)
+                    if type(name) == "string" and type(obj) == "table" then
+                        -- Check if it's a valid frame
+                        local isValidFrame = false
+                        local success = pcall(function()
+                            isValidFrame = obj.GetObjectType and obj.IsVisible and obj.GetRect
+                        end)
+                        
+                        if success and isValidFrame then
+                            local shouldCheck = false
+                            pcall(function()
+                                shouldCheck = obj:IsVisible() 
+                                    and obj ~= WorldFrame 
+                                    and obj ~= FA.highlighter 
+                                    and obj ~= FA.hud
+                                    and not seen[obj]
+                            end)
+                            
+                            if shouldCheck then
+                                local hitTest = pcall(function()
+                                    local l, b, w, h = obj:GetRect()
+                                    if l and b and w and h and w > 0 and h > 0 then
+                                        if cursorX >= l and cursorX <= (l + w) and cursorY >= b and cursorY <= (b + h) then
+                                            seen[obj] = true
+                                            tinsert(state.validFrames, obj)
+                                        end
+                                    end
+                                end)
+                            end
+                        end
+                    end
                 end
             end
             
@@ -949,6 +1017,8 @@ function FA:StartPicker(callback, source)
                     state.visualLayerIndex = 1 
                 end
                 state.selectedFrame = state.validFrames[state.visualLayerIndex]
+            else
+                state.selectedFrame = nil
             end
         else
             state.selectedFrame = state.manualSelection
@@ -991,6 +1061,10 @@ end
 function FA:StopPicker()
     local state = self.state
     state.pickerActive = false
+    
+    if self.pickerUpdateFrame then
+        self.pickerUpdateFrame:SetScript("OnUpdate", nil)
+    end
     
     if self.hud then 
         self.hud:Hide() 
