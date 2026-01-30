@@ -12,7 +12,7 @@ externals:
     Libraries/AceGUI-3.0: https://repos.curseforge.com/wow/ace3/trunk/AceGUI-3.0
     Libraries/AceConfig-3.0: https://repos.curseforge.com/wow/ace3/trunk/AceConfig-3.0
     Libraries/AceSerializer-3.0: https://repos.curseforge.com/wow/ace3/trunk/AceSerializer-3.0
-    Libraries/LibDualSpec-1.0: https://repos.curseforge.com/wow/libdualspec-1-0/trunk
+    Libraries/LibDualSpec-1.0: https://repos.wowace.com/wow/libdualspec-1-0
     Libraries/LibDeflate:
         url: https://github.com/SafeteeWoW/LibDeflate.git
         tag: latest
