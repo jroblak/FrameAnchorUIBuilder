@@ -55,6 +55,7 @@ local AC = SafeGetLib("AceConfig-3.0")
 local ACD = SafeGetLib("AceConfigDialog-3.0")
 local ACR = SafeGetLib("AceConfigRegistry-3.0")
 local LD = SafeGetLib("LibDeflate")
+local LDS = LibStub("LibDualSpec-1.0", true)
 
 -- ============================================================================
 -- CONSTANTS
@@ -121,6 +122,10 @@ function FA:OnInitialize()
     
     local charProfile = UnitName("player") .. " - " .. GetRealmName()
     self.db = LibStub("AceDB-3.0"):New("FrameAnchorDB", defaults, charProfile)
+
+    if LDS then
+        LDS:EnhanceDatabase(self.db, "FrameAnchor")
+    end
     
     if not StaticPopupDialogs["FRAMEANCHOR_RELOAD_CONFIRM"] then
         StaticPopupDialogs["FRAMEANCHOR_RELOAD_CONFIRM"] = {
@@ -136,6 +141,9 @@ function FA:OnInitialize()
     end
 
     AC:RegisterOptionsTable(AddonName, function() return self:GetOptions() end)
+    local profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
+    AC:RegisterOptionsTable(AddonName .. "_Profiles", profiles)
+
     local profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
     AC:RegisterOptionsTable(AddonName .. "_Profiles", profiles)
 
@@ -548,9 +556,14 @@ function FA:GetOptions()
     if self.cachedOptions and not self.optionsDirty then
         return self.cachedOptions
     end
-    
+
     local state = self.state
-    
+
+    local profileOptions = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
+    profileOptions.order = 1.5
+    profileOptions.name = "Profiles"
+    LDS:EnhanceOptions(profileOptions, self.db)
+
     local options = {
         name = "Frame Anchor", 
         handler = FA, 
@@ -611,6 +624,7 @@ function FA:GetOptions()
                     list = { order = 10, type = "group", inline = true, name = "", args = {} }
                 }
             },
+            profiles = profileOptions,
             share = {
                 order = 2, 
                 type = "group", 
