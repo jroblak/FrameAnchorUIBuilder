@@ -562,8 +562,10 @@ function FA:GetOptions()
     local profileOptions = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
     profileOptions.order = 1.5
     profileOptions.name = "Profiles"
-    LDS:EnhanceOptions(profileOptions, self.db)
-
+    if LDS then
+        LDS:EnhanceOptions(profileOptions, self.db)
+    end
+    
     local options = {
         name = "Frame Anchor", 
         handler = FA, 
