@@ -144,9 +144,6 @@ function FA:OnInitialize()
     local profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
     AC:RegisterOptionsTable(AddonName .. "_Profiles", profiles)
 
-    local profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
-    AC:RegisterOptionsTable(AddonName .. "_Profiles", profiles)
-
     self.optionsFrame = ACD:AddToBlizOptions(AddonName, AddonName)
     self.profilesFrame = ACD:AddToBlizOptions(AddonName .. "_Profiles", "Profiles", AddonName)
     
@@ -161,13 +158,24 @@ end
 function FA:OnEnable()
     if not self.eventFrame then
         self.eventFrame = CreateFrame("Frame")
-        self.eventFrame:SetScript("OnEvent", function(_, event)
+        self.eventFrame:SetScript("OnEvent", function(_, event, arg1)
             if event == "PLAYER_ENTERING_WORLD" then
                 FA:OnWorldLoad()
+            elseif event == "PLAYER_REGEN_ENABLED" or event == "CINEMATIC_STOP" then
+                FA:ScheduleApplyAnchors()
+            elseif (event == "UNIT_ENTERED_VEHICLE" or event == "UNIT_EXITED_VEHICLE") and arg1 == "player" then
+                FA:ScheduleApplyAnchors()
+            elseif event == "PLAYER_MOUNT_DISPLAY_CHANGED" then
+                FA:ScheduleApplyAnchors()
             end
         end)
     end
     self.eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    self.eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+    self.eventFrame:RegisterEvent("CINEMATIC_STOP")
+    self.eventFrame:RegisterEvent("UNIT_ENTERED_VEHICLE")
+    self.eventFrame:RegisterEvent("UNIT_EXITED_VEHICLE")
+    self.eventFrame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
 end
 
 function FA:OnDisable()
@@ -261,8 +269,6 @@ function FA:ScheduleApplyAnchors()
 end
 
 function FA:ApplyAllAnchors()
-    if InCombatLockdown() then return end
-
     self.forceUpdate = true
     
     for childName, data in pairs(self.db.profile.links) do
@@ -309,6 +315,13 @@ function FA:SecureAnchor(childName, child, parent, point, relPoint, x, y)
         hooksecurefunc(child, "SetPoint", function(frame)
             FA:EnforceAnchor(frame)
         end)
+        
+        if child.SetAllPoints then
+            hooksecurefunc(child, "SetAllPoints", function(frame)
+                FA:EnforceAnchor(frame)
+            end)
+        end
+        
         child.fa_isHooked = true
     end
     
@@ -318,7 +331,13 @@ end
 function FA:EnforceAnchor(child)
     if not child then return end
     if not child.fa_anchorData then return end
-    if InCombatLockdown() then return end
+    
+    -- Only abort if the frame is ACTUALLY protected.
+    -- Unprotected frames (like Resource Bars) are allowed to move in combat.
+    if InCombatLockdown() and child.IsProtected and child:IsProtected() then 
+        return 
+    end
+    
     if child.fa_isMoving then return end  -- Prevent infinite loops
     
     local data = child.fa_anchorData
@@ -338,7 +357,7 @@ function FA:EnforceAnchor(child)
     end
 
     -- LIGHT mode: check if position actually changed
-    if mode ~= "YOLO" then
+    if mode ~= "YOLO" and not self.forceUpdate then
         local success, currP, currRel, currRelP, currX, currY = pcall(child.GetPoint, child)
         if success and currP == point and currRel == parent and currRelP == relPoint and 
            abs((currX or 0) - x) < POSITION_TOLERANCE and 
@@ -552,7 +571,6 @@ end
 -- ============================================================================
 
 function FA:GetOptions()
-    -- Return cached options if valid
     if self.cachedOptions and not self.optionsDirty then
         return self.cachedOptions
     end
@@ -793,11 +811,9 @@ function FA:GetOptions()
                     confirm = true, 
                     confirmText = "Are you sure?",
                     func = function() 
-                        -- Clean up frame data
                         local child = _G[childName]
                         if child then
                             child.fa_anchorData = nil
-                            -- Note: can't unhook, but without data the hook is a no-op
                         end
                         
                         FA.db.profile.links[childName] = nil
@@ -831,7 +847,6 @@ function FA:GetNavButton(name)
         local btn = CreateFrame("Button", "FA_Nav_" .. name, UIParent)
         self.navButtons[name] = btn
         
-        -- Set up click handlers based on button type
         if name == "Up" then
             btn:SetScript("OnClick", function()
                 local state = FA.state
@@ -973,7 +988,6 @@ function FA:StartPicker(callback, source)
             local seen = state.seenFrames
             wipe(seen)
             
-            -- Method 1: Standard mouse focus (interactive frames)
             local frames = GetMouseFoci and GetMouseFoci() or {GetMouseFocus()}
             
             for _, frm in ipairs(frames or {}) do
@@ -985,18 +999,13 @@ function FA:StartPicker(callback, source)
                 end
             end
             
-            -- Method 2: Geometric hit test (only if Method 1 found few results)
-            -- This catches clickthrough frames but is expensive, so we skip it
-            -- when GetMouseFoci already found interactive frames
             if #state.validFrames <= 1 then
                 local cursorX, cursorY = GetCursorPosition()
                 local scale = UIParent:GetEffectiveScale()
                 cursorX, cursorY = cursorX / scale, cursorY / scale
                 
                 for name, obj in pairs(_G) do
-                    -- Quick filter: only check string keys (frame names)
                     if type(name) == "string" and type(obj) == "table" then
-                        -- Check if it's a valid frame
                         local isValidFrame = false
                         local success = pcall(function()
                             isValidFrame = obj.GetObjectType and obj.IsVisible and obj.GetRect
